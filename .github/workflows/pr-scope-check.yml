@@ -1,0 +1,43 @@
+name: PR Scope Check
+
+on:
+  pull_request:
+
+jobs:
+  single-feature-scope:
+    name: Enforce Single Feature Scope
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check changed feature scopes
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+
+          changed_files=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")
+          echo "Changed files:"
+          echo "$changed_files"
+
+          feature_scopes=$(echo "$changed_files" \
+            | awk -F/ '/^Sources\/ClosetWeek\/Features\// {print $4}' \
+            | sort -u)
+
+          feature_count=$(echo "$feature_scopes" | sed '/^$/d' | wc -l | tr -d ' ')
+
+          echo "Detected feature scopes:"
+          echo "$feature_scopes"
+
+          if [ "$feature_count" -gt 1 ]; then
+            echo "❌ このPRは複数機能を同時に変更しています。"
+            echo "機能単位でPRを分割してください。"
+            exit 1
+          fi
+
+          echo "✅ 機能単位の変更スコープです。"
