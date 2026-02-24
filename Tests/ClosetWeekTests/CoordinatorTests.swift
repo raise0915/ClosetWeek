@@ -21,6 +21,17 @@ final class CoordinatorTests: XCTestCase {
             XCTFail("dayEditorになっていない")
         }
     }
+    func testクローゼット編集導線のpushとpop() {
+        let coordinator = ClosetCoordinator()
+        let id = UUID()
+
+        coordinator.push(.itemEditor(itemId: id))
+        XCTAssertEqual(coordinator.path.count, 1)
+
+        coordinator.pop()
+        XCTAssertTrue(coordinator.path.isEmpty)
+    }
+
     func testAI提案導線のpushとpop() {
         let coordinator = SuggestionCoordinator()
         let id = UUID()
