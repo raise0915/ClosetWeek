@@ -119,3 +119,71 @@ public final class WeekDetailViewModel {
         }
     }
 }
+
+public final class WeekDayEditorViewModel {
+    public struct State: Equatable {
+        public var status: LoadingState = .idle
+        public var weekPlanId: UUID
+        public var date: Date
+        public var summary: String
+
+        public init(weekPlanId: UUID, date: Date, summary: String = "") {
+            self.weekPlanId = weekPlanId
+            self.date = date
+            self.summary = summary
+        }
+    }
+
+    public enum Event {
+        case regenerate
+        case save
+        case updateSummary(String)
+    }
+
+    public private(set) var state: State
+
+    private let regenerateUseCase: RegenerateDayOutfitUseCase
+    private let store: WeekPlanStore
+
+    public init(
+        weekPlanId: UUID,
+        date: Date,
+        initialSummary: String = "",
+        regenerateUseCase: RegenerateDayOutfitUseCase,
+        store: WeekPlanStore
+    ) {
+        self.state = State(weekPlanId: weekPlanId, date: date, summary: initialSummary)
+        self.regenerateUseCase = regenerateUseCase
+        self.store = store
+    }
+
+    public func send(_ event: Event) {
+        switch event {
+        case .updateSummary(let text):
+            state.summary = text
+        case .regenerate:
+            state.status = .loading
+            switch regenerateUseCase.execute(for: state.date, weekPlanId: state.weekPlanId) {
+            case .success(let day):
+                state.summary = day.summary
+                state.status = .success
+            case .failure:
+                state.status = .error("日別コーデ再生成に失敗しました")
+            }
+        case .save:
+            guard var plan = store.plan(id: state.weekPlanId) else {
+                state.status = .error("週プランが見つかりません")
+                return
+            }
+
+            if let index = plan.days.firstIndex(where: { Calendar.current.isDate($0.date, inSameDayAs: state.date) }) {
+                plan.days[index] = DayOutfit(date: state.date, summary: state.summary)
+            } else {
+                plan.days.append(DayOutfit(date: state.date, summary: state.summary))
+            }
+
+            store.upsert(plan)
+            state.status = .success
+        }
+    }
+}
