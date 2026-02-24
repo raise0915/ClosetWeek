@@ -37,4 +37,21 @@ final class WeekViewModelTests: XCTestCase {
         XCTAssertEqual(store.plan(id: plan.id)?.days.first?.summary, "更新後")
         XCTAssertEqual(overview.state.currentWeek?.days.first?.summary, "更新後")
     }
+    func test存在しない週読み込みでerrorになる() {
+        let store = WeekPlanStore()
+        let vm = WeekOverviewViewModel(generateUseCase: StubGenerateWeekOutfitUseCase(), store: store)
+
+        vm.send(.loadWeek(UUID()))
+
+        XCTAssertEqual(vm.state.status, .error("週プランが見つかりません"))
+    }
+
+    func test週詳細で存在しない週読み込みでerrorになる() {
+        let detail = WeekDetailViewModel(store: WeekPlanStore())
+
+        detail.send(.load(weekPlanId: UUID()))
+
+        XCTAssertEqual(detail.state.status, .error("週プランが見つかりません"))
+    }
+
 }

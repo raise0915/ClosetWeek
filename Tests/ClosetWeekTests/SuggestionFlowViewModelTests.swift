@@ -2,6 +2,17 @@ import XCTest
 @testable import ClosetWeek
 
 final class SuggestionFlowViewModelTests: XCTestCase {
+
+    func testsubmit成功で提案一覧が更新される() {
+        let vm = SuggestionFlowViewModel(useCase: StubGenerateItemSuggestionsUseCase())
+
+        vm.send(.submit)
+
+        XCTAssertEqual(vm.state.status, .success)
+        XCTAssertFalse(vm.state.suggestions.isEmpty)
+    }
+
+
     func test条件入力から詳細遷移して戻っても状態保持() {
         let vm = SuggestionFlowViewModel(useCase: StubGenerateItemSuggestionsUseCase())
 
