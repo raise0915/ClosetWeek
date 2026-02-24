@@ -2,7 +2,8 @@
 import SwiftUI
 
 struct SettingsRootView: View {
-    @State private var viewModel = SettingsViewModel()
+    @State private var selectedRegion: String = "東京"
+    @State private var enableNotification: Bool = true
 
     private let regions = ["東京", "大阪", "福岡", "札幌"]
 
@@ -10,49 +11,23 @@ struct SettingsRootView: View {
         NavigationStack {
             Form {
                 Section("地域") {
-                    Picker(
-                        "地域",
-                        selection: Binding(
-                            get: { viewModel.state.selectedRegion },
-                            set: {
-                                viewModel.send(.changeRegion($0))
-                            }
-                        )
-                    ) {
+                    Picker("地域", selection: $selectedRegion) {
                         ForEach(regions, id: \.self) { region in
                             Text(region).tag(region)
                         }
                     }
-                    Text("現在の地域: \(viewModel.state.selectedRegion)")
+                    Text("現在の地域: \(selectedRegion)")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
 
                 Section("通知") {
-                    Toggle(
-                        "朝のコーデ通知",
-                        isOn: Binding(
-                            get: { viewModel.state.enableNotification },
-                            set: { viewModel.send(.toggleNotification($0)) }
-                        )
-                    )
+                    Toggle("朝のコーデ通知", isOn: $enableNotification)
                 }
 
                 Section("アカウント") {
                     Text("準備中")
                         .foregroundStyle(.secondary)
-                }
-
-                Section {
-                    Button("設定を保存") {
-                        viewModel.send(.save)
-                    }
-                }
-
-                if !viewModel.state.statusMessage.isEmpty {
-                    Section("ステータス") {
-                        Text(viewModel.state.statusMessage)
-                    }
                 }
             }
             .navigationTitle("設定")
