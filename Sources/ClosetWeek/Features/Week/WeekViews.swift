@@ -6,6 +6,7 @@ struct WeekRootView: View {
 
     @State private var currentWeek: WeekPlan?
     @State private var statusText: String = ""
+    @State private var observerID: UUID?
 
     var body: some View {
         NavigationStack(path: Binding(get: { coordinator.path }, set: { _ in })) {
@@ -39,7 +40,22 @@ struct WeekRootView: View {
                 }
             }
             .navigationTitle("週間コーデ")
-            .onAppear { if currentWeek == nil { generateWeek() } }
+            .onAppear {
+                if observerID == nil {
+                    observerID = coordinator.store.observe { updated in
+                        if currentWeek?.id == updated.id {
+                            currentWeek = updated
+                        }
+                    }
+                }
+                if currentWeek == nil { generateWeek() }
+            }
+            .onDisappear {
+                if let observerID {
+                    coordinator.store.removeObserver(observerID)
+                    self.observerID = nil
+                }
+            }
             .navigationDestination(for: WeekRoute.self) { route in
                 switch route {
                 case let .dayEditor(date, weekPlanId):
@@ -166,7 +182,7 @@ private struct SavedWeeksView: View {
     let store: WeekPlanStore
 
     var body: some View {
-        List(Array(store.plansById.keys), id: \.self) { id in
+        List(Array(store.plansById.keys).sorted(by: { $0.uuidString < $1.uuidString }), id: \.self) { id in
             Button("保存週: \(id.uuidString.prefix(8))") {
                 coordinator.push(.weekDetail(weekPlanId: id))
             }
