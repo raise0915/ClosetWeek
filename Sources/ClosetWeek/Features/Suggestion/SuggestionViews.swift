@@ -21,7 +21,7 @@ struct SuggestionRootView: View {
 private struct SuggestionInputView: View {
     let coordinator: SuggestionCoordinator
 
-    private let viewModel = SuggestionFlowViewModel(useCase: StubGenerateItemSuggestionsUseCase())
+    @State private var viewModel = SuggestionFlowViewModel(useCase: StubGenerateItemSuggestionsUseCase())
     @State private var conditionText: String = ""
     @State private var suggestions: [Suggestion] = []
     @State private var statusMessage: String = ""

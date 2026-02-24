@@ -2,6 +2,28 @@ import XCTest
 @testable import ClosetWeek
 
 final class WeekDayEditorViewModelTests: XCTestCase {
+
+    func test保存時に対象日が無ければ追加される() {
+        let id = UUID()
+        let baseDate = Date()
+        let anotherDate = Calendar.current.date(byAdding: .day, value: 1, to: baseDate) ?? baseDate
+        let original = WeekPlan(id: id, title: "今週", days: [DayOutfit(date: baseDate, summary: "既存")])
+        let store = WeekPlanStore(plansById: [id: original])
+
+        let vm = WeekDayEditorViewModel(
+            weekPlanId: id,
+            date: anotherDate,
+            initialSummary: "追加日",
+            regenerateUseCase: StubRegenerateDayOutfitUseCase(),
+            store: store
+        )
+
+        vm.send(.save)
+
+        XCTAssertEqual(store.plan(id: id)?.days.count, 2)
+        XCTAssertTrue(store.plan(id: id)?.days.contains(where: { $0.summary == "追加日" }) == true)
+    }
+
     func test再生成成功でsummary更新() {
         let store = WeekPlanStore()
         let vm = WeekDayEditorViewModel(
