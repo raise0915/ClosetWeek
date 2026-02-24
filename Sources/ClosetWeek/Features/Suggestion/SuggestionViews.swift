@@ -20,22 +20,57 @@ struct SuggestionRootView: View {
 
 private struct SuggestionInputView: View {
     let coordinator: SuggestionCoordinator
+
+    private let viewModel = SuggestionFlowViewModel(useCase: StubGenerateItemSuggestionsUseCase())
     @State private var conditionText: String = ""
+    @State private var suggestions: [Suggestion] = []
+    @State private var statusMessage: String = ""
 
     var body: some View {
         Form {
             Section("条件入力") {
                 TextField("例: 通勤 / 20℃ / 雨", text: $conditionText)
-                Button("提案を生成（ダミー）") {}
+                Button("提案を生成") {
+                    viewModel.send(.updateConditions(conditionText))
+                    viewModel.send(.submit)
+                    syncFromViewModel()
+                }
+            }
+
+            if !statusMessage.isEmpty {
+                Section("ステータス") {
+                    Text(statusMessage)
+                        .foregroundStyle(statusMessage.contains("失敗") ? .red : .secondary)
+                }
             }
 
             Section("提案結果") {
-                ForEach(0..<3, id: \.self) { i in
-                    Button("提案\(i + 1)") {
-                        coordinator.push(.suggestionDetail(suggestionId: UUID()))
+                if suggestions.isEmpty {
+                    Text("まだ提案がありません")
+                        .foregroundStyle(.secondary)
+                } else {
+                    ForEach(suggestions) { suggestion in
+                        Button(suggestion.title) {
+                            viewModel.send(.openDetail(suggestion.id))
+                            coordinator.push(.suggestionDetail(suggestionId: suggestion.id))
+                        }
                     }
                 }
             }
+        }
+    }
+
+    private func syncFromViewModel() {
+        suggestions = viewModel.state.suggestions
+        switch viewModel.state.status {
+        case .idle:
+            statusMessage = ""
+        case .loading:
+            statusMessage = "生成中..."
+        case .success:
+            statusMessage = "提案を生成しました"
+        case let .error(message):
+            statusMessage = message
         }
     }
 }
