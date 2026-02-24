@@ -32,6 +32,7 @@ final class CoordinatorTests: XCTestCase {
         XCTAssertTrue(coordinator.path.isEmpty)
     }
 
+
     func testAI提案導線のpushとpop() {
         let coordinator = SuggestionCoordinator()
         let id = UUID()

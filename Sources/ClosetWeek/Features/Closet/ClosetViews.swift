@@ -21,22 +21,14 @@ struct ClosetRootView: View {
 private struct ClosetListView: View {
     let coordinator: ClosetCoordinator
 
-    private let viewModel = ClosetOverviewViewModel(repository: InMemoryClosetRepository())
-
-    @State private var items: [ClosetItem] = []
-    @State private var statusText: String = ""
+    private let itemIDs = [UUID(), UUID()]
 
     var body: some View {
         List {
             Section("アイテム") {
-                if items.isEmpty {
-                    Text("アイテムがありません")
-                        .foregroundStyle(.secondary)
-                } else {
-                    ForEach(items) { item in
-                        Button(item.name) {
-                            coordinator.push(.itemEditor(itemId: item.id))
-                        }
+                ForEach(Array(itemIDs.enumerated()), id: \.offset) { index, id in
+                    Button("アイテム\(index + 1) を編集") {
+                        coordinator.push(.itemEditor(itemId: id))
                     }
                 }
             }
@@ -44,17 +36,6 @@ private struct ClosetListView: View {
             Section("操作") {
                 Button("アイテム追加") { coordinator.push(.itemEditor(itemId: nil)) }
             }
-
-            if !statusText.isEmpty {
-                Section("ステータス") {
-                    Text(statusText)
-                }
-            }
-        }
-        .onAppear {
-            viewModel.send(.load)
-            items = viewModel.state.items
-            statusText = viewModel.state.status == .success ? "読み込み完了" : ""
         }
     }
 }
