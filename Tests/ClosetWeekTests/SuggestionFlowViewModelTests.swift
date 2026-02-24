@@ -12,6 +12,7 @@ final class SuggestionFlowViewModelTests: XCTestCase {
         XCTAssertFalse(vm.state.suggestions.isEmpty)
     }
 
+
     func test条件入力から詳細遷移して戻っても状態保持() {
         let vm = SuggestionFlowViewModel(useCase: StubGenerateItemSuggestionsUseCase())
 
