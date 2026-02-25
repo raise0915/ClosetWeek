@@ -39,5 +39,30 @@ final class SwiftDataWeekPlanRepositoryTests: XCTestCase {
         XCTAssertEqual(loaded.first?.title, "更新")
         XCTAssertEqual(loaded.first?.days.count, 1)
     }
+
+    func testsave更新時にcreatedAtを維持しupdatedAtを更新する() throws {
+        let schema = Schema([WeekPlanModel.self, DayOutfitModel.self])
+        let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try ModelContainer(for: schema, configurations: [configuration])
+        let context = ModelContext(container)
+        let repository = SwiftDataWeekPlanRepository(context: context)
+
+        let id = UUID()
+        try repository.save(weekPlan: WeekPlan(id: id, title: "初期", days: []))
+
+        let predicate = #Predicate<WeekPlanModel> { $0.id == id }
+        let descriptor = FetchDescriptor<WeekPlanModel>(predicate: predicate)
+        let initialModel = try XCTUnwrap(context.fetch(descriptor).first)
+        let initialCreatedAt = initialModel.createdAt
+        let initialUpdatedAt = initialModel.updatedAt
+
+        Thread.sleep(forTimeInterval: 0.02)
+
+        try repository.save(weekPlan: WeekPlan(id: id, title: "更新", days: []))
+
+        let updatedModel = try XCTUnwrap(context.fetch(descriptor).first)
+        XCTAssertEqual(updatedModel.createdAt, initialCreatedAt)
+        XCTAssertGreaterThan(updatedModel.updatedAt, initialUpdatedAt)
+    }
 }
 #endif
