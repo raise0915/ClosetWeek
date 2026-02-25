@@ -29,51 +29,22 @@ public struct HTTPRetryPolicy {
 }
 
 public protocol HTTPClient {
-    func execute(_ request: URLRequest) throws -> (Data, HTTPURLResponse)
+    func execute(_ request: URLRequest) async throws -> (Data, HTTPURLResponse)
 }
 
 public final class URLSessionHTTPClient: HTTPClient {
-    private final class OutputBox {
-        let lock = NSLock()
-        private(set) var result: Result<(Data, HTTPURLResponse), Error> = .failure(URLError(.unknown))
-
-        func set(_ result: Result<(Data, HTTPURLResponse), Error>) {
-            lock.lock()
-            self.result = result
-            lock.unlock()
-        }
-    }
-
     private let session: URLSession
 
     public init(session: URLSession = .shared) {
         self.session = session
     }
 
-    public func execute(_ request: URLRequest) throws -> (Data, HTTPURLResponse) {
-        let semaphore = DispatchSemaphore(value: 0)
-        let output = OutputBox()
-
-        let task = session.dataTask(with: request) { data, response, error in
-            defer { semaphore.signal() }
-
-            if let error {
-                output.set(.failure(error))
-                return
-            }
-
-            guard let response = response as? HTTPURLResponse else {
-                output.set(.failure(URLError(.badServerResponse)))
-                return
-            }
-
-            output.set(.success((data ?? Data(), response)))
+    public func execute(_ request: URLRequest) async throws -> (Data, HTTPURLResponse) {
+        let (data, response) = try await session.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw URLError(.badServerResponse)
         }
-
-        task.resume()
-        semaphore.wait()
-
-        return try output.result.get()
+        return (data, httpResponse)
     }
 }
 
@@ -86,11 +57,11 @@ public final class RetryingHTTPClient: HTTPClient {
         self.retryPolicy = retryPolicy
     }
 
-    public func execute(_ request: URLRequest) throws -> (Data, HTTPURLResponse) {
+    public func execute(_ request: URLRequest) async throws -> (Data, HTTPURLResponse) {
         var attempt = 1
         while true {
             do {
-                let result = try baseClient.execute(request)
+                let result = try await baseClient.execute(request)
                 if retryPolicy.shouldRetry(statusCode: result.1.statusCode, error: nil, attempt: attempt) {
                     attempt += 1
                     continue
@@ -119,12 +90,12 @@ public final class WeatherAPIRepository: WeatherRepository {
         self.client = client
     }
 
-    public func currentWeatherSummary() -> String {
+    public func currentWeatherSummary() async -> String {
         var request = URLRequest(url: endpoint)
         request.httpMethod = "GET"
 
         do {
-            let (data, response) = try client.execute(request)
+            let (data, response) = try await client.execute(request)
             guard (200...299).contains(response.statusCode) else {
                 return "天気情報の取得に失敗しました"
             }
@@ -149,12 +120,12 @@ public final class SuggestionAPIRepository: SuggestionRepository {
         self.client = client
     }
 
-    public func fetchSuggestions() -> [Suggestion] {
+    public func fetchSuggestions() async -> [Suggestion] {
         var request = URLRequest(url: endpoint)
         request.httpMethod = "GET"
 
         do {
-            let (data, response) = try client.execute(request)
+            let (data, response) = try await client.execute(request)
             guard (200...299).contains(response.statusCode) else {
                 return []
             }

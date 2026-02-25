@@ -5,7 +5,7 @@ public protocol ClosetRepository {
 }
 
 public protocol WeatherRepository {
-    func currentWeatherSummary() -> String
+    func currentWeatherSummary() async -> String
 }
 
 public protocol WeightRepository {
@@ -13,7 +13,7 @@ public protocol WeightRepository {
 }
 
 public protocol SuggestionRepository {
-    func fetchSuggestions() -> [Suggestion]
+    func fetchSuggestions() async -> [Suggestion]
 }
 
 public protocol WeekPlanRepository {
