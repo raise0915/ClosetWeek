@@ -20,7 +20,11 @@ public struct SaveWeekPlanToRepositoryUseCase: SaveWeekPlanUseCase {
     }
 
     public func execute(_ weekPlan: WeekPlan) -> Result<Void, Error> {
-        repository.save(weekPlan: weekPlan)
-        return .success(())
+        do {
+            try repository.save(weekPlan: weekPlan)
+            return .success(())
+        } catch {
+            return .failure(error)
+        }
     }
 }

@@ -18,5 +18,5 @@ public protocol SuggestionRepository {
 
 public protocol WeekPlanRepository {
     func fetchWeeks() -> [WeekPlan]
-    func save(weekPlan: WeekPlan)
+    func save(weekPlan: WeekPlan) throws
 }

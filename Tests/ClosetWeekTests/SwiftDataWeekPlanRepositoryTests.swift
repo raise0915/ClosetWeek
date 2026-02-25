@@ -15,7 +15,7 @@ final class SwiftDataWeekPlanRepositoryTests: XCTestCase {
         let secondDay = DayOutfit(date: Date(timeIntervalSince1970: 1_700_086_400), summary: "2日目")
         let plan = WeekPlan(title: "今週", days: [secondDay, firstDay])
 
-        repository.save(weekPlan: plan)
+        try repository.save(weekPlan: plan)
 
         let loaded = repository.fetchWeeks()
         XCTAssertEqual(loaded.count, 1)
@@ -31,8 +31,8 @@ final class SwiftDataWeekPlanRepositoryTests: XCTestCase {
         let repository = SwiftDataWeekPlanRepository(context: ModelContext(container))
 
         let id = UUID()
-        repository.save(weekPlan: WeekPlan(id: id, title: "初期", days: []))
-        repository.save(weekPlan: WeekPlan(id: id, title: "更新", days: [DayOutfit(date: .now, summary: "更新日")]))
+        try repository.save(weekPlan: WeekPlan(id: id, title: "初期", days: []))
+        try repository.save(weekPlan: WeekPlan(id: id, title: "更新", days: [DayOutfit(date: .now, summary: "更新日")]))
 
         let loaded = repository.fetchWeeks()
         XCTAssertEqual(loaded.count, 1)

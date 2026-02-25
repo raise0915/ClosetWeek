@@ -46,7 +46,7 @@ public final class InMemoryWeekPlanRepository: WeekPlanRepository {
         Array(storage.values)
     }
 
-    public func save(weekPlan: WeekPlan) {
+    public func save(weekPlan: WeekPlan) throws {
         storage[weekPlan.id] = weekPlan
     }
 }

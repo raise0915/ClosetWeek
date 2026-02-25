@@ -54,9 +54,9 @@ public final class SwiftDataWeekPlanRepository: WeekPlanRepository {
         }
     }
 
-    public func save(weekPlan: WeekPlan) {
+    public func save(weekPlan: WeekPlan) throws {
         let descriptor = FetchDescriptor<WeekPlanModel>(predicate: #Predicate { $0.id == weekPlan.id })
-        let existing = try? context.fetch(descriptor).first
+        let existing = try context.fetch(descriptor).first
 
         let now = Date()
         let target = existing ?? WeekPlanModel(
@@ -77,7 +77,7 @@ public final class SwiftDataWeekPlanRepository: WeekPlanRepository {
             context.insert(target)
         }
 
-        try? context.save()
+        try context.save()
     }
 }
 
