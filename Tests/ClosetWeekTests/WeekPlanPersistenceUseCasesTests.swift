@@ -28,4 +28,29 @@ final class WeekPlanPersistenceUseCasesTests: XCTestCase {
         }
         XCTAssertEqual(repository.fetchWeeks().first?.id, plan.id)
     }
+
+    func test保存UseCaseでリポジトリエラーを返せる() {
+        let repository = FailingWeekPlanRepository()
+        let useCase = SaveWeekPlanToRepositoryUseCase(repository: repository)
+        let plan = WeekPlan(title: "保存対象", days: [])
+
+        let result = useCase.execute(plan)
+
+        guard case .failure(let error) = result else {
+            return XCTFail("失敗が返却されない")
+        }
+        XCTAssertEqual(error as? FailingWeekPlanRepository.RepositoryError, .saveFailed)
+    }
+}
+
+private final class FailingWeekPlanRepository: WeekPlanRepository {
+    enum RepositoryError: Error, Equatable {
+        case saveFailed
+    }
+
+    func fetchWeeks() -> [WeekPlan] { [] }
+
+    func save(weekPlan: WeekPlan) throws {
+        throw RepositoryError.saveFailed
+    }
 }
