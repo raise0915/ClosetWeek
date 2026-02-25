@@ -3,7 +3,7 @@ import SwiftUI
 
 @main
 struct ClosetWeekApp: App {
-    @State private var coordinator = AppCoordinator()
+    @State private var coordinator = AppRuntime.makeCoordinator()
 
     var body: some Scene {
         WindowGroup {
