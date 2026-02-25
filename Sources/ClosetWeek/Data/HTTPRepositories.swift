@@ -40,11 +40,23 @@ public final class URLSessionHTTPClient: HTTPClient {
     }
 
     public func execute(_ request: URLRequest) async throws -> (Data, HTTPURLResponse) {
-        let (data, response) = try await session.data(for: request)
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw URLError(.badServerResponse)
+        try await withCheckedThrowingContinuation { continuation in
+            let task = session.dataTask(with: request) { data, response, error in
+                if let error {
+                    continuation.resume(throwing: error)
+                    return
+                }
+
+                guard let httpResponse = response as? HTTPURLResponse else {
+                    continuation.resume(throwing: URLError(.badServerResponse))
+                    return
+                }
+
+                continuation.resume(returning: (data ?? Data(), httpResponse))
+            }
+
+            task.resume()
         }
-        return (data, httpResponse)
     }
 }
 
