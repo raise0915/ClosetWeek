@@ -12,7 +12,7 @@ public final class InMemoryClosetRepository: ClosetRepository {
 
 public final class InMemoryWeatherRepository: WeatherRepository {
     public init() {}
-    public func currentWeatherSummary() -> String { "晴れ 22℃" }
+    public func currentWeatherSummary() async -> String { "晴れ 22℃" }
 }
 
 public final class InMemoryWeightRepository: WeightRepository {
@@ -32,7 +32,7 @@ public final class InMemorySuggestionRepository: SuggestionRepository {
         self.suggestions = suggestions
     }
 
-    public func fetchSuggestions() -> [Suggestion] { suggestions }
+    public func fetchSuggestions() async -> [Suggestion] { suggestions }
 }
 
 public final class InMemoryWeekPlanRepository: WeekPlanRepository {
